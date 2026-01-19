@@ -1,0 +1,54 @@
+workflowExternalId: wf_icapi_data_pipeline
+version: '1'
+workflowDefinition:
+  tasks:
+  - externalId: '{{ workflow_external_id }}_asset_transformation_task'
+    type: transformation
+    name: create_asset_hierarchy
+    description: First task to transform asset hierarchy
+    parameters:
+      transformation:
+          externalId: create_asset_hierarchy
+          concurrencyPolicy: fail
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+  - externalId: '{{ workflow_external_id }}_contextualize_transformation_task'
+    type: transformation
+    name: contextualize_ts_assets
+    description: Second task to contextualize assets with time series
+    parameters:
+      transformation:
+          externalId: contextualize_ts_assets
+          concurrencyPolicy: fail
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+    dependsOn:
+      - externalId: '{{ workflow_external_id }}_asset_transformation_task'
+  - externalId: '{{ workflow_external_id }}_datapoints_function_task'
+    type: function
+    name: icapi_datapoints_extractor
+    description: Third task to extract data points
+    parameters:
+      function:
+        externalId: icapi_datapoints_extractor
+        data: { "hours": 1 }
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+    dependsOn:
+      - externalId: '{{ workflow_external_id }}_contextualize_transformation_task'
+  - externalId: '{{ workflow_external_id }}_timeseries_function_task'
+    type: function
+    name: oee_timeseries
+    description: Fourth task to extract OEE time series
+    parameters:
+      function:
+        externalId: oee_timeseries
+        data: { }
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+    dependsOn:
+      - externalId: '{{ workflow_external_id }}_datapoints_function_task'
