@@ -1,6 +1,6 @@
 - name: Frontfill every 10 minutes for the last hour of data (streamer)
   functionExternalId: icapi_datapoints_extractor
-  cronExpression: "*/10 * * * *"
+  cronExpression: "*/15 * * * *"
   data:
     hours: 1
   authentication:
